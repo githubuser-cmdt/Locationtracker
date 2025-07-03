@@ -1,0 +1,84 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Location Tracker</title>
+  <meta charset="UTF-8">
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 50px; }
+    #status { font-size: 18px; margin-top: 20px; color: #333; }
+  </style>
+</head>
+<body>
+
+<h2>📍 Location Tracking in Progress...</h2>
+<p id="status">Initializing...</p>
+
+<script>
+  // Firebase config (your actual config)
+  var firebaseConfig = {
+    apiKey: "AIzaSyD4vi4rFqVHd4sPSY_LnNXt1d9ezmibTo",
+    authDomain: "locationtrack-c3d83.firebaseapp.com",
+    databaseURL: "https://locationtrack-c3d83-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "locationtrack-c3d83",
+    storageBucket: "locationtrack-c3d83.appspot.com",
+    messagingSenderId: "1066999358422",
+    appId: "1:1066999358422:web:8c8a6b6e38192ab447377"
+  };
+  firebase.initializeApp(firebaseConfig);
+  var database = firebase.database();
+
+  function getIdFromUrl() {
+    var params = new URLSearchParams(window.location.search);
+    return params.get('id') || "unknown_user";
+  }
+
+  function updateStatus(msg) {
+    document.getElementById("status").textContent = msg;
+    console.log("[Status] " + msg);
+  }
+
+  function uploadLocation(lat, lng, id) {
+    var ref = database.ref("locations/" + id);
+    ref.set({ lat: lat, lng: lng }, function(error) {
+      if (error) {
+        updateStatus("❌ Error saving location to Firebase.");
+      } else {
+        updateStatus("✅ Location saved successfully to Firebase.");
+      }
+    });
+  }
+
+  if ("geolocation" in navigator) {
+    updateStatus("📡 Requesting location permission...");
+    navigator.geolocation.getCurrentPosition(function(position) {
+      var lat = position.coords.latitude;
+      var lng = position.coords.longitude;
+      var id = getIdFromUrl();
+      updateStatus("📍 Location fetched. Uploading...");
+      uploadLocation(lat, lng, id);
+    }, function(error) {
+      switch(error.code) {
+        case error.PERMISSION_DENIED:
+          updateStatus("❌ User denied the request for Geolocation.");
+          break;
+        case error.POSITION_UNAVAILABLE:
+          updateStatus("❌ Location information is unavailable.");
+          break;
+        case error.TIMEOUT:
+          updateStatus("❌ The request to get user location timed out.");
+          break;
+        default:
+          updateStatus("❌ An unknown error occurred.");
+          break;
+      }
+    });
+  } else {
+    updateStatus("❌ Geolocation not supported in this browser.");
+  }
+</script>
+
+</body>
+</html>
