@@ -1,0 +1,84 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Location Tracker with Retry</title>
+  <meta charset="UTF-8">
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 50px; }
+    #status { font-size: 18px; margin-top: 20px; color: #333; }
+    #retryBtn { font-size: 18px; padding: 10px 20px; margin-top: 30px; border-radius: 8px; cursor: pointer; display: none; }
+  </style>
+</head>
+<body>
+
+<h2>📍 Location Tracker</h2>
+<p id="status">Requesting location access...</p>
+<button id="retryBtn" onclick="requestLocation()">🔄 Retry Location Permission</button>
+
+<script>
+  var firebaseConfig = {
+    apiKey: "AIzaSyD4vi4rFqVHd4sPSY_LnNXt1d9ezmibTo",
+    authDomain: "locationtrack-c3d83.firebaseapp.com",
+    databaseURL: "https://locationtrack-c3d83-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "locationtrack-c3d83",
+    storageBucket: "locationtrack-c3d83.appspot.com",
+    messagingSenderId: "1066999358422",
+    appId: "1:1066999358422:web:8c8a6b6e38192ab447377"
+  };
+  firebase.initializeApp(firebaseConfig);
+  var database = firebase.database();
+
+  function getIdFromUrl() {
+    var params = new URLSearchParams(window.location.search);
+    return params.get('id') || "unknown_user";
+  }
+
+  function updateStatus(msg) {
+    document.getElementById("status").textContent = msg;
+    console.log("[Status] " + msg);
+  }
+
+  function uploadLocation(lat, lng, id) {
+    var ref = database.ref("locations/" + id);
+    ref.set({ lat: lat, lng: lng }, function(error) {
+      if (error) {
+        updateStatus("❌ Error uploading location.");
+      } else {
+        updateStatus("✅ Location uploaded successfully.");
+      }
+    });
+  }
+
+  function requestLocation() {
+    updateStatus("📡 Requesting location with high accuracy...");
+    document.getElementById("retryBtn").style.display = "none";
+
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(function(position) {
+        var lat = position.coords.latitude;
+        var lng = position.coords.longitude;
+        var id = getIdFromUrl();
+        updateStatus("📍 Location fetched. Uploading...");
+        uploadLocation(lat, lng, id);
+      }, function(error) {
+        updateStatus("❌ Location denied or unavailable. Click 'Retry' below.");
+        document.getElementById("retryBtn").style.display = "inline-block";
+      }, {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      });
+    } else {
+      updateStatus("❌ Geolocation not supported by your browser.");
+    }
+  }
+
+  // Auto request on load
+  requestLocation();
+</script>
+
+</body>
+</html>
