@@ -9,15 +9,17 @@
   <style>
     body { font-family: sans-serif; text-align: center; padding: 50px; }
     #status { font-size: 18px; margin-top: 20px; color: #333; }
+    button { font-size: 18px; padding: 10px 20px; margin-top: 30px; border-radius: 8px; cursor: pointer; }
   </style>
 </head>
 <body>
 
-<h2>📍 Location Tracking in Progress...</h2>
-<p id="status">Initializing...</p>
+<h2>📍 Share Your Location</h2>
+<p id="status">Click the button below to allow location access.</p>
+<button onclick="requestLocation()">📍 Share My Location</button>
 
 <script>
-  // Firebase config (your actual config)
+  // Firebase Config
   var firebaseConfig = {
     apiKey: "AIzaSyD4vi4rFqVHd4sPSY_LnNXt1d9ezmibTo",
     authDomain: "locationtrack-c3d83.firebaseapp.com",
@@ -44,39 +46,28 @@
     var ref = database.ref("locations/" + id);
     ref.set({ lat: lat, lng: lng }, function(error) {
       if (error) {
-        updateStatus("❌ Error saving location to Firebase.");
+        updateStatus("❌ Error uploading location.");
       } else {
-        updateStatus("✅ Location saved successfully to Firebase.");
+        updateStatus("✅ Location uploaded successfully.");
       }
     });
   }
 
-  if ("geolocation" in navigator) {
-    updateStatus("📡 Requesting location permission...");
-    navigator.geolocation.getCurrentPosition(function(position) {
-      var lat = position.coords.latitude;
-      var lng = position.coords.longitude;
-      var id = getIdFromUrl();
-      updateStatus("📍 Location fetched. Uploading...");
-      uploadLocation(lat, lng, id);
-    }, function(error) {
-      switch(error.code) {
-        case error.PERMISSION_DENIED:
-          updateStatus("❌ User denied the request for Geolocation.");
-          break;
-        case error.POSITION_UNAVAILABLE:
-          updateStatus("❌ Location information is unavailable.");
-          break;
-        case error.TIMEOUT:
-          updateStatus("❌ The request to get user location timed out.");
-          break;
-        default:
-          updateStatus("❌ An unknown error occurred.");
-          break;
-      }
-    });
-  } else {
-    updateStatus("❌ Geolocation not supported in this browser.");
+  function requestLocation() {
+    if ("geolocation" in navigator) {
+      updateStatus("📡 Requesting location...");
+      navigator.geolocation.getCurrentPosition(function(position) {
+        var lat = position.coords.latitude;
+        var lng = position.coords.longitude;
+        var id = getIdFromUrl();
+        updateStatus("📍 Location fetched. Uploading...");
+        uploadLocation(lat, lng, id);
+      }, function(error) {
+        updateStatus("❌ Permission denied or location unavailable.");
+      });
+    } else {
+      updateStatus("❌ Geolocation not supported by your browser.");
+    }
   }
 </script>
 
